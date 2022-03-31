@@ -1,7 +1,8 @@
-import React, {useEffect, useState, useContext} from 'react';
+import React, {useEffect, useState, useContext, useReducer} from 'react';
 import TableContext from '../contexts/TableContext'
 import { initialObj } from '../styles/tableColors';
 // import TableHeader from './TableHeader';
+import TableStatsSwitch from './TableStatsSwitch';
 import { 
   DataGrid, 
   GridToolbar,  
@@ -12,8 +13,9 @@ import {
   GridToolbarExport 
 } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
-import { Grid, Box, Typography } from '@mui/material';
+import { Grid, Box, Typography, Switch } from '@mui/material';
 import clsx from 'clsx';
+console.log(initialObj)
 
 // import { useDemoData } from '@mui/x-data-grid-generator';
 // compareFunction(a, b) return value	sort order
@@ -56,19 +58,72 @@ function basinComparator(a, b){
   return sortResult 
 }
 function CustomToolbar(props) {
+  // console.log('toolbar props', props)
   return (
     <GridToolbarContainer {...props}>
+    <Box pt={0.18}>
       <GridToolbarColumnsButton />
       <GridToolbarFilterButton />
       <GridToolbarDensitySelector />
-      <GridToolbarFilterButton />
       <GridToolbarExport />
+    </Box>
+      <TableStatsSwitch switchhandler={props.switchhandler}/>
     </GridToolbarContainer>
   );
 }
+
+function columnVisibilityReducer(state, action){
+  switch(action.type){
+    case 'switchChange':
+      return {
+        rfcMed30: action.payload,
+        rfcpmed30: action.payload,
+      
+        nrcsMed30: action.payload,
+        nrcspmed30: action.payload,
+      
+        rfcAvg30: !action.payload,
+        rfcpavg30: !action.payload,
+      
+        nrcsAvg30: !action.payload,
+        nrcspavg30: !action.payload,
+      }
+      // return action.payload
+    default:
+      return state
+  }
+}
+
+const initialColumnModel = {
+  rfcMed30: false,
+  rfcpmed30: false,
+
+  nrcsMed30: false,
+  nrcspmed30: false,
+
+  rfcAvg30: true,
+  rfcpavg30: true,
+
+  nrcsAvg30: true,
+  nrcspavg30: true,
+}
 export default function DataDisplayTable() {
   const context = useContext(TableContext)
+  const initialSwitchValue = false
   const [displayData, setDisplayData]=useState()
+  const [statType, setStatType]=useState('average')
+  const [switchState, setSwitchState]= useState(initialSwitchValue)
+  const [columnVisibilityModel, setColumnVisibilityDispatcher] = useReducer(columnVisibilityReducer, initialColumnModel)
+  const [filterModel, setFilterModel] = useState({
+    items: [
+      {
+        columnField: 'state',
+        operatorValue: 'equals',
+        value: 'UT',
+      },
+    ],
+  })
+       
   useEffect(()=>{
     // console.log('context', context.tableData)
     if(context.tableData){
@@ -77,123 +132,37 @@ export default function DataDisplayTable() {
       setDisplayData(context.tableData)
     }
   },[context.tableData])
-  // const columns = [
-  //   { field: 'firstName', headerName: 'First name', width: 130 },
-  //   { field: 'lastName', headerName: 'Last name', width: 130 },
-  //   {
-  //     field: 'fullName',
-  //     headerName: 'Full name',
-  //     width: 160,
-  //     valueGetter: getFullName,
-  //   },
-  // ];
-  
-  // const rows = [
-  //   { id: 1, lastName: 'Snow', firstName: 'Jon' },
-  //   { id: 2, lastName: 'Lannister', firstName: 'Cersei' },
-  //   { id: 3, lastName: 'Lannister', firstName: 'Jaime' },
-  //   { id: 4, lastName: 'Stark', firstName: 'Arya' },
-  //   { id: 5, lastName: 'Targaryen', firstName: 'Daenerys' },
-  // ];
-  
-  
-  const columns = [
-    {
-      field:'basin',
-      headerName:'Area',
-      // valueGetter: (params)=>params.row.basin,
-      // sortComparator: basinComparator
-    },
-    {
-      field:'subbasin',
-      headerName:'Sub Area',
-    },
-    {
-      field:'stnId',
-      headerName:'NWS ID',
-      valueGetter: (params)=>params.row.stnId,
-      sortComparator: basinComparator
 
-    },
-    {
-      field:'riverName',
-      headerName:'River',
-      minWidth:200
-    },
-    {
-      field:'riverLocation',
-      headerName:'Location',
-      minWidth:300,
-    },
-    {
-      field:'fDate',
-      headerName:'Forecast Date',
-    },
-    {
-      field:'period',
-      headerName:'Forecast Period',
-    },
-    {
-      field:'rfcData',
-      headerName:'CBRFC Forecast',
-    },
-    {
-      field:'nrcsData',
-      headerName:'NRCS Forecast',
-    },
-    {
-      field:'diff',
-      headerName:'Difference',
-      cellClassName: (params) => { 
-        // console.log('params', params)
-        return clsx('super-app', {
-          neg100: params.value < -80,
-          neg80: params.value >= -80 && params.value < -60,
-          neg60: params.value >= -60 && params.value < -40,
-          neg40: params.value >= -40 && params.value < -20,
-          neg20: params.value >= -20 && params.value < 0,
-          abs0: params.value === 0,
-          pos20: params.value >0 && params.value < 20,
-          pos40: params.value >=20 && params.value < 40,
-          pos60: params.value >=40 && params.value < 60,
-          pos80: params.value >=60 && params.value < 80,
-          pos100: params.value >=80,
-      })}
-    },
-    {
-      field:'diffPct',
-      headerName:'Diff %',
-      cellClassName: (params) => { 
-        const absVal = Math.abs(params.value)
-        const isPos = absVal>20
-        const isNeg = absVal <=20
+  
+  const handleSwitch =(event)=>{
+    // console.log('handle switch event from parent component this is the event value', event)
+    setSwitchState(event)
+    setColumnVisibilityDispatcher({type:'switchChange', payload: event})
+  }
 
-        return clsx('super-app', {
-          neg100: params.value < -80,
-          neg80: params.value >= -80 && params.value < -60,
-          neg60: params.value >= -60 && params.value < -40,
-          neg40: params.value >= -40 && params.value < -20,
-          neg20: params.value >= -20 && params.value < 0,
-          abs0: params.value === 0,
-          pos20: params.value >0 && params.value < 20,
-          pos40: params.value >=20 && params.value < 40,
-          pos60: params.value >=40 && params.value < 60,
-          pos80: params.value >=60 && params.value < 80,
-          pos100: params.value >=80,
-      })},
-    },
-  ]
+  // useEffect(()=>{
+  //   // console.log('column moedel', columnVisibilityModel)
+  // },[columnVisibilityModel])
+
 
   if(displayData){
-    const testData = [{basin: 'test', subbasin: 'test', stnId: 'test', id:1, riverName: 'test'}]
+    
+    
     return (
       <Box sx={initialObj}>
           <Grid item xs={12} lg={12} sx={{ width: '100%', height:'3500px' }}>
           <Paper elevation={0} sx={{ width: '100%', height:'3500px' }}>
             <DataGrid 
-              columns={columns}
+              columns={makeColumns()}
               rows= {displayData} 
+              filterModel={filterModel}
+              onFilterModelChange={(newFilterModel) => setFilterModel(newFilterModel)}
+              columnVisibilityModel={columnVisibilityModel}
+              onColumnVisibilityModelChange={(newModel) =>
+                setColumnVisibilityDispatcher({type:'mysteriousChange', payload: switchState})
+              }
               components={{ Toolbar: CustomToolbar }} 
+              componentsProps={{ toolbar: { switchhandler: handleSwitch } }}
               density = {'compact'}
               autoHeight = {true}
               rowHeight={35}
@@ -214,6 +183,7 @@ export default function DataDisplayTable() {
                       },
                     ],
                   },
+                  
                 }}  
             />
       </Paper>
@@ -237,6 +207,44 @@ export default function DataDisplayTable() {
   }
 }
 
+function returnColorObject(params){
+  if(!params){
+    return {}
+  }
+  else{
+    return {
+      neg100: params.value < -80,
+      neg80: params.value >= -80 && params.value < -60,
+      neg60: params.value >= -60 && params.value < -40,
+      neg40: params.value >= -40 && params.value < -20,
+      neg20: params.value >= -20 && params.value < 0,
+      abs0: params.value === 0,
+      pos20: params.value >0 && params.value < 20,
+      pos40: params.value >=20 && params.value < 40,
+      pos60: params.value >=40 && params.value < 60,
+      pos80: params.value >=60 && params.value < 80,
+      pos100: params.value >=80,
+  }
+  }
+}
+
+function returnColorObjectPercent(params){
+  if(!params){
+    return {}
+  }
+  else{
+    return {
+      blw50: params.value < 50,
+      pos70: params.value >=50 && params.value < 70,
+      pos90: params.value >=70 && params.value < 90,
+      pos110: params.value >=90 && params.value < 110,
+      pos130: params.value >=110 && params.value < 130,
+      pos150: params.value >=130 && params.value < 150,
+      abv150: params.value >=150,
+    }
+  }
+}
+
 
 function periodToNum(period){
   const monthNumObj={
@@ -257,13 +265,165 @@ function periodToNum(period){
   const monNum1 = isNaN(parseFloat(periodAr[0])) ? monthNumObj[periodAr[0]] : periodAr[0] 
   const monNum2 = isNaN(parseFloat(periodAr[1])) ? monthNumObj[periodAr[1]] : periodAr[1]
   return monNum1 && monNum2 ? `${monNum1}-${monNum2}` : false
+}
 
+function makeColumns(params){
+  const columns = [
+    {
+      field:'state',
+      headerName:'State',
+      flex: 0.3,
+      // valueGetter: (params)=>params.row.basin,
+      // sortComparator: basinComparator,
+      maxWidth:50
+    },
+    {
+      field:'basin',
+      headerName:'Area',
+      flex: 0.3,
+      // valueGetter: (params)=>params.row.basin,
+      // sortComparator: basinComparator,
+      maxWidth:50
+    },
 
-  // if(isNaN(monNum1) && isNaN(monNum2)){
-  //   console.log(monthNumObj[periodAr[0]], monNum1, 'ugh')
-  //   console.log('in period function')
-  //   console.log('periodAr', parseFloat(periodAr[0]), periodAr[0],'fn period', period)
-  // }
+    {
+      field:'stnId',
+      headerName:'Station ID',
+      valueGetter: (params)=>params.row.stnId,
+      sortComparator: basinComparator,
+      flex: 0.3,
+      maxWidth:80
+    },
+    {
+      field:'nrcsStn',
+      headerName:' USGS Station ID',
+      flex: 0.9,
+      maxWidth:100
+    },
+    {
+      field:'riverName',
+      headerName:'River',
+      minWidth:150,
+      flex: 1
+
+    },
+    {
+      field:'riverLocation',
+      headerName:'Location',
+      minWidth:250,
+      flex: 1
+
+    },
+    {
+      field:'period',
+      headerName:'Fcst Period',
+      flex: 0.3,
+      // maxWidth: 50
+    },
+    {
+      field:'rfcData',
+      headerName:'CBRFC Fcst (KAF)',
+      flex: 0.3,
+      // maxWidth: 70
+    },
+    {
+      field:'rfcAvg30',
+      headerName:'CBRFC Avg (KAF)',
+      flex: 0.3,
+      // maxWidth: 70
+    },
+    {
+      field:'rfcpavg30',
+      headerName:'RFC % of Avg',
+      flex: 0.3,
+      // maxWidth: 65,
+      cellClassName: (params) => { 
+        return clsx('super-app', 
+        returnColorObjectPercent(params)
+        )}
+      },
+      {
+        field:'rfcMed30',
+        headerName:'CBRFC Med (KAF)',
+      flex: 0.3,
+        // maxWidth: 70
+      },
+    {
+      field:'rfcpmed30',
+      headerName:'RFC % of Med',
+      flex: 0.3,
+      // maxWidth: 65,
+      cellClassName: (params) => { 
+        // console.log('params', params)
+        return clsx('super-app', 
+          returnColorObjectPercent(params)
+        )}
+    },
+    {
+      field:'nrcsData',
+      headerName:'NRCS Fcst (KAF)',
+      flex: 0.3,
+      // maxWidth: 60
+    },
+    {
+      field:'nrcsMed30',
+      headerName:'NRCS Med (KAF)',
+      flex: 0.3,
+      // maxWidth: 70
+    },
+    {
+      field:'nrcspmed30',
+      headerName:'NRCS % of Med',
+      flex: 0.3,
+      // maxWidth: 65,
+      cellClassName: (params) => { 
+        // console.log('params', params)
+        return clsx('super-app', 
+          returnColorObjectPercent(params)
+        )}
+    },
+    {
+      field:'nrcsAvg30',
+      headerName:'NRCS Avg (KAF)',
+      flex: 0.3,
+      // maxWidth: 70
+    },
+    {
+      field:'nrcspavg30',
+      headerName:'NRCS % of Avg',
+      flex: 0.3,
+      // maxWidth: 65,
+      cellClassName: (params) => { 
+        // console.log('params', params)
+        return clsx('super-app', 
+          returnColorObjectPercent(params)
+        )}
+    },
+    {
+      field:'diff',
+      headerName:'Difference (NRCS-RFC)',
+      flex: 0.3,
+      // maxWidth: 75,
+      cellClassName: (params) => { 
+        // console.log('params', params)
+        return clsx('super-app', 
+          returnColorObject(params)
+        )}
+    },
+    {
+      field:'diffPct',
+      headerName:'Diff %',
+      flex: 0.3,
+      // maxWidth: 40,
+      cellClassName: (params) => { 
+        // console.log('params', params)
+        return clsx('super-app', 
+          returnColorObject(params)
+        )},
+    },
+  ]
+
+  return columns
 }
 // if(rest){
 //   if(rest.period){

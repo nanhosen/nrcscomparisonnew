@@ -197,7 +197,7 @@ export default function FilterArea(props){
                 handleFormat = {handleFormat} 
                 section={'dataSource'}
                 value = {context.dataFilters.dataSource}
-                disabledStatus={false}
+                disabledStatus={true}
                 exclusive={true}
                 // setterObj = {dynamicButtonConfig?.dataSource?.setterObj} 
                 stateKey = {dynamicButtonConfig?.dataSource?.buttonStateKey}
@@ -206,11 +206,11 @@ export default function FilterArea(props){
               />
             </Paper>
           </Grid>
-          <Grid item xs={1} sm={1} md={1} >
+          {/* <Grid item xs={1} sm={1} md={1} >
             <Paper elevation={0}>
               <Residual />
             </Paper>
-          </Grid>  
+          </Grid>   */}
                 
           
         </Grid>

@@ -14,7 +14,7 @@ export default function TableArea(){
     return(
       <>
         <Typography variant="h6" gutterBottom component="div">
-          Reqesting Table Data
+          Requesting Table Data
         </Typography>  
         <LinearProgress />
       </>

@@ -10,7 +10,8 @@ export default function formatTableData({serverData, dataSource, basinFilters, v
       id = id + 1
       const stationData = stnDataAr[0]
       if(stationData){
-        const {metadata, nrcsData: nrcsData1, diff: fullDiff, period, diffPct: fullPct,  stnNrcsData, ...notMetadata} = stationData
+        // console.log('stationdata', stationData)
+        const {metadata, nrcsData: nrcsData1, diff: fullDiff, period, diffPct: fullPct,  stnNrcsData, nrcsNormals, rfcNormals, ...notMetadata} = stationData
         const nrcsData = nrcsData1 ? nrcsData1 :
           stnNrcsData ?
             stnNrcsData : undefined
@@ -20,10 +21,18 @@ export default function formatTableData({serverData, dataSource, basinFilters, v
             diffPct = Math.round(calcPercentDiff(nrcsData ,stationData.rfcData))
           }
         }
+        // rfcpavg30
+        // nrcspavg30
         // const diffPct = fullPct ? Math.round(fullPct) : undefined
         const diff = fullDiff? Math.round(fullDiff) : undefined
         const periodNum = period ? periodToNum(period) : undefined
-        const formattedDataObj = {id, stnId, nrcsData, diffPct, diff, ...metadata, ...notMetadata, period:periodNum, fDate:`${viewMonth}-1-2022`}
+        const {pavg: rfcpavg30, pmed: rfcpmed30, avg30: rfcAvg30, med30: rfcMed30} = rfcNormals ? rfcNormals :  {}
+        const {pavg: nrcspavg30, pmed: nrcspmed30, avg30: nrcsAvg30, med30: nrcsMed30} = nrcsNormals ? nrcsNormals : {}
+        const normalsData = makeNormalsObject({rfcpavg30, rfcpmed30, rfcAvg30, rfcMed30, nrcspavg30, nrcspmed30, nrcsAvg30, nrcsMed30})
+        if(rfcAvg30 && nrcsAvg30 && rfcAvg30 !== nrcsAvg30){
+        }
+        // console.log(nrcspavg30, 'asdf')
+        const formattedDataObj = {id, stnId, nrcsData, diffPct, diff, ...metadata, ...notMetadata, period:periodNum, fDate:`${viewMonth}-1-2022`, ...normalsData}
         
         // console.log('formatted data obj', formattedDataObj)
         const hasFilters = checkForFilters(basinFilters, dataSource)
@@ -177,4 +186,16 @@ function checkKeepIgnore(dataObj={}, keepAr=[], ignoreAr=[], strict=true){
     if (typeof str != "string") return false // we only process strings!  
     return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
            !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+  }
+
+
+  function makeNormalsObject(inputObject){
+    if(!inputObject){
+      throw new Error('no input to make normals object function')
+    }
+    const returnObj = Object.create({})
+    for(const[key, value] of Object.entries(inputObject)){
+      returnObj[key]= isNumeric(value) || typeof value === 'number' ? Math.round(value) : value
+    }
+    return returnObj
   }

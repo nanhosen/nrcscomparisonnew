@@ -27,7 +27,7 @@ function buttonActionReducer(state, action){
 }
 const initialState = {
   basinFilters: [],
-  viewMonth: 1,
+  viewMonth: 3,
   viewArea: 'CBRFC',
   viewYear: "2022",
   dataSource: 'both',
@@ -48,7 +48,7 @@ export default function DataProvider({children}){
   const [{ data:requestData, loading, error }, refetch] = useAxios(`https://cbrfc.noaa.gov/dbdata/ndb/nrcsData/${dataFilters.viewField}/${requestObj}`)
 
   useEffect(()=>{
-    // console.log('data', requestData, 'loading', loading, 'error', error)
+    console.log('data', requestData, 'loading', loading, 'error', error)
     setServerData(requestData)
   },[requestData, loading, error, requestObj])
 
@@ -58,6 +58,7 @@ export default function DataProvider({children}){
     if(serverData){
       console.log('i am the server data that is being found', serverData)
       console.log( 'i am the object being sent', {serverData, ...dataFilters})
+      console.log('i am the payload', serverData, dataFilters.dataSource, dataFilters.basinFilters, dataFilters.viewMonth, dataFilters)
       dispatch({type:'processData', payload: {serverData, ...dataFilters}})
     }
   },[serverData, dataFilters.dataSource, dataFilters.basinFilters, dataFilters.viewMonth, dataFilters])
