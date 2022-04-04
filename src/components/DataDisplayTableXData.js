@@ -10,11 +10,20 @@ import {
   GridToolbarContainer,
   GridToolbarFilterButton,
   GridToolbarDensitySelector,
-  GridToolbarExport 
+  GridToolbarExport ,
+  useGridApiRef
 } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import { Grid, Box, Typography, Switch } from '@mui/material';
 import clsx from 'clsx';
+// import HelpOutlineIcon from '@mui/icons-material/Delete';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import HelpCenterIcon from '@mui/icons-material/HelpCenter';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+
+const diffDescriber = 'Explanation of why these stations cannot be compared'
 console.log(initialObj)
 
 // import { useDemoData } from '@mui/x-data-grid-generator';
@@ -109,6 +118,7 @@ const initialColumnModel = {
 }
 export default function DataDisplayTable() {
   const context = useContext(TableContext)
+  const apiRef = useGridApiRef()
   const initialSwitchValue = false
   const [displayData, setDisplayData]=useState()
   const [statType, setStatType]=useState('average')
@@ -132,6 +142,15 @@ export default function DataDisplayTable() {
       setDisplayData(context.tableData)
     }
   },[context.tableData])
+
+  // useEffect(() => {
+  //   if(apiRef && apiRef.current){
+  //     return apiRef.current.subscribeEvent(
+  //       GridEvents.cellClick,
+  //       onEvent,
+  //     );
+  //   }
+  // }, [apiRef]);
 
   
   const handleSwitch =(event)=>{
@@ -168,21 +187,21 @@ export default function DataDisplayTable() {
               rowHeight={35}
               headerHeight = {80}
               sx={{
-                    '& .MuiDataGrid-columnHeaderTitle': {
-                        textOverflow: "clip",
-                        whiteSpace: "break-spaces",
-                        lineHeight: 1
-                    }
-                }}
-                initialState={{
-                  sorting: {
-                    sortModel: [
-                      {
-                        field: 'stnId',
-                        sort: 'asc',
-                      },
-                    ],
-                  },
+                '& .MuiDataGrid-columnHeaderTitle': {
+                    textOverflow: "clip",
+                    whiteSpace: "break-spaces",
+                    lineHeight: 1
+                },
+              }}
+              initialState={{
+                sorting: {
+                  sortModel: [
+                    {
+                      field: 'stnId',
+                      sort: 'asc',
+                    },
+                  ],
+                },
                   
                 }}  
             />
@@ -208,11 +227,16 @@ export default function DataDisplayTable() {
 }
 
 function returnColorObject(params){
+  // console.log('field', params, 'value', params.field)
+  // console.log('params', params, 'value', params.getValue(params.id,'id'))
+  params.value = params.field === 'diff' ? params.row.diffPct : params.value 
+
   if(!params){
     return {}
   }
   else{
     return {
+      na:params.value === 'na',
       neg100: params.value < -80,
       neg80: params.value >= -80 && params.value < -60,
       neg60: params.value >= -60 && params.value < -40,
@@ -303,8 +327,8 @@ function makeColumns(params){
     {
       field:'riverName',
       headerName:'River',
-      minWidth:150,
-      flex: 1
+      minWidth:50,
+      flex: 0.8
 
     },
     {
@@ -408,12 +432,29 @@ function makeColumns(params){
         // console.log('params', params)
         return clsx('super-app', 
           returnColorObject(params)
-        )}
+        )},
+      renderCell:(params) =>{
+        if(params.value !== 'na'){
+          return params.value
+        }
+        else{
+          return <><Tooltip title={diffDescriber} placement="bottom" arrow>
+          <IconButton>
+            <HelpCenterIcon fontSize="small"/>
+          </IconButton>
+        </Tooltip>
+            N/A
+        </>
+        }
+      }  
     },
     {
       field:'diffPct',
       headerName:'Diff %',
       flex: 0.3,
+      renderCell: params=>{
+        return params.value!== 'na' ? params.value : ''
+      },
       // maxWidth: 40,
       cellClassName: (params) => { 
         // console.log('params', params)

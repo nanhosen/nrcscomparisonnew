@@ -22,6 +22,9 @@ const colorObjPercent = {
   abv150:'#00876c',
 }
 
+const otherThings = {
+  na: '#E8E8E8'
+}
 
 const exportObject = (inputObjects)=>{
   console.log(Object.entries(inputObjects))
@@ -46,11 +49,16 @@ const exportObject = (inputObjects)=>{
         color: '#000000',
         fontWeight: '500',
       }
+      if(category === 'na'){
+        // console.log('should ad pading')
+        value.paddingLeft = '0px'
+        // console.log(value, value, 'value')
+      }
       returnObject[key]=value
     }
   }
   return returnObject
 }
 
-const initialObj = exportObject({colorObj, colorObjPercent})
+const initialObj = exportObject({colorObj, colorObjPercent, otherThings})
 export {initialObj}

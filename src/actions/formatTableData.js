@@ -5,6 +5,7 @@ export default function formatTableData({serverData, dataSource, basinFilters, v
     const fullDataset = serverData.data
     // console.log(fullDataset)
     var id = 0
+    const incompStns = []
 
     for (const [stnId, stnDataAr] of Object.entries(fullDataset)) {
       id = id + 1
@@ -24,15 +25,33 @@ export default function formatTableData({serverData, dataSource, basinFilters, v
         // rfcpavg30
         // nrcspavg30
         // const diffPct = fullPct ? Math.round(fullPct) : undefined
-        const diff = fullDiff? Math.round(fullDiff) : undefined
+        let diff = fullDiff? Math.round(fullDiff) : undefined
         const periodNum = period ? periodToNum(period) : undefined
         const {pavg: rfcpavg30, pmed: rfcpmed30, avg30: rfcAvg30, med30: rfcMed30} = rfcNormals ? rfcNormals :  {}
         const {pavg: nrcspavg30, pmed: nrcspmed30, avg30: nrcsAvg30, med30: nrcsMed30} = nrcsNormals ? nrcsNormals : {}
         const normalsData = makeNormalsObject({rfcpavg30, rfcpmed30, rfcAvg30, rfcMed30, nrcspavg30, nrcspmed30, nrcsAvg30, nrcsMed30})
-        if(rfcAvg30 && nrcsAvg30 && rfcAvg30 !== nrcsAvg30){
+        if(normalsData){
+          // console.log('normals data', normalsData)
+          // const {rfcpavg30, rfcpmed30, rfcAvg30, rfcMed30, nrcspavg30, nrcspmed30, nrcsAvg30, nrcsMed30} = normalsData
+          if((nrcsAvg30 && rfcAvg30) || (nrcsMed30 && rfcMed30)){
+            if(( rfcAvg30 !== nrcsAvg30)||(rfcMed30 !== nrcsMed30)){
+              if(calcPercentDiff(rfcAvg30, nrcsAvg30) >5 || calcPercentDiff(rfcMed30, nrcsMed30) >5){
+                incompStns.push(stnId)
+                normalsData.mismatched = true
+                diff = 'na'
+                diffPct = 'na'
+
+              }
+              // console.log(rfcAvg30, nrcsAvg30, rfcAvg30 !== nrcsAvg30)
+              // console.log(rfcMed30, nrcsMed30, rfcMed30 !== nrcsMed30)
+            }
+          }
         }
         // console.log(nrcspavg30, 'asdf')
         const formattedDataObj = {id, stnId, nrcsData, diffPct, diff, ...metadata, ...notMetadata, period:periodNum, fDate:`${viewMonth}-1-2022`, ...normalsData}
+        // if(rfcAvg30 && nrcsAvg30 && rfcAvg30 !== nrcsAvg30){
+        //   console.log('formatteddataobj', formattedDataObj)
+        // }
         
         // console.log('formatted data obj', formattedDataObj)
         const hasFilters = checkForFilters(basinFilters, dataSource)
@@ -59,6 +78,7 @@ export default function formatTableData({serverData, dataSource, basinFilters, v
         }
       }  
     }
+    console.log(incompStns.length, 'incommp stations', JSON.stringify(incompStns))
   }
   return fullDataAr
 }
