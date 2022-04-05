@@ -1,10 +1,9 @@
-import React, {useEffect, useState, useContext, useReducer} from 'react';
+import React, {useEffect, useState, useContext, useReducer, useRef} from 'react';
 import TableContext from '../contexts/TableContext'
 import { initialObj } from '../styles/tableColors';
 // import TableHeader from './TableHeader';
 import TableStatsSwitch from './TableStatsSwitch';
 import TableTypeSwitch from './TableTypeSwitch';
-
 import { 
   DataGrid, 
   GridToolbar,  
@@ -13,7 +12,13 @@ import {
   GridToolbarFilterButton,
   GridToolbarDensitySelector,
   GridToolbarExport ,
-  useGridApiRef
+  useGridApiRef,
+  gridPageCountSelector,
+  gridPageSizeSelector,
+  gridPageSelector,
+  useGridApiContext,
+  useGridSelector,
+  gridVisibleRowCountSelector
 } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import { Grid, Box, Typography, Switch } from '@mui/material';
@@ -24,9 +29,14 @@ import HelpCenterIcon from '@mui/icons-material/HelpCenter';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-
+import SparkLine from './Sparkline';
+import { sparklineData } from '../data/sparklineData';
+// import { monthUtils } from '../utils/dateUtils';
+import {numberPeriodtoStringPeriod} from '../utils/dateUtils';
 const diffDescriber = 'Explanation of why these stations cannot be compared'
-console.log(initialObj)
+// console.log(initialObj)
+
+// console.log('sparklineData', sparklineData)
 
 // import { useDemoData } from '@mui/x-data-grid-generator';
 // compareFunction(a, b) return value	sort order
@@ -70,6 +80,15 @@ function basinComparator(a, b){
 }
 function CustomToolbar(props) {
   // console.log('toolbar props', props)
+  const apiRef = useGridApiContext();
+  const page = useGridSelector(apiRef, gridPageSelector);
+  const pageCount = useGridSelector(apiRef, gridPageCountSelector);
+  const visRows = useGridSelector(apiRef, gridVisibleRowCountSelector);
+
+  console.log('apiRef', apiRef)
+  console.log('page', page)
+  console.log('pageCount', pageCount)
+  console.log('visRows', visRows)
   return (
     <GridToolbarContainer {...props}>
     <Box pt={0.18}>
@@ -119,13 +138,14 @@ const initialColumnModel = {
   nrcsAvg30: true,
   nrcspavg30: true,
 }
-export default function DataDisplayTable() {
+export default function SparklinesTable() {
   const context = useContext(TableContext)
-  const apiRef = useGridApiRef()
+  const tableRef = useRef(null)
   const initialSwitchValue = false
   const [displayData, setDisplayData]=useState()
   const [statType, setStatType]=useState('average')
   const [switchState, setSwitchState]= useState(initialSwitchValue)
+  const [lastStation, setLastStation] = useState()
   const [columnVisibilityModel, setColumnVisibilityDispatcher] = useReducer(columnVisibilityReducer, initialColumnModel)
   const [filterModel, setFilterModel] = useState({
     items: [
@@ -136,15 +156,37 @@ export default function DataDisplayTable() {
       },
     ],
   })
+  useEffect(()=>{
+    console.log('processsing state', context.doneProcessing)
+  },[context.doneProcessing])
        
   useEffect(()=>{
     // console.log('context', context.tableData)
     if(context.tableData){
-      console.log('table data is here')
+      console.log('table data is here', context.tableData)
+      const stns = ["AFPU1","ASHU1","BCTU1","BERU1","BEVU1","BFFU1","BNRU1","BRUU1","CASU1","CCDU1","CCSU1","CIVU1","CLLU1","CLRU1","COAU1","CRAU1","CRUU1","DADU1","DCRU1","DELU1","DOLU1","DURU1","ECBU1","ECRU1","ELLU1","MIU1","FCNU1","FRRU1","GATU1","GRNU1","GRVU1","HATU1","HPBU1","HRMU1","HURU1","JOVU1","LAAU1","LAMU1","LCTU1","LGNU1","MAAU1","CMU1","MDCU1","MILU1","MYRU1","NEUU1","OAWU1","OGHU1","PINU1","PIUU1","PRLU1","PRZU1","PVHU1","RBCU1","RKUU1","ROKU1","SAYU1","CMU1","SEKU1","SFRU1","SFSU1","SRKU1","SRYU1","STAU1","STCU1","STIU1","SZZU1","TADU1","USTU1","10166605","VCVU1","VIRU1","WATU1","WCGU1","WESU1","WFDU1","WOOU1","WRSU1","WTRU1","YLLU1","9219750","9291000","9329050","9337000","0023000","0133800","0146000","0172952","0173450"]
+      const sparklineTableData = context.tableData.filter(curr=>{
+        // console.log('curr', curr, curr.id)
+        return stns.indexOf(curr.id)>=0
+      })
+      
+      console.log(sparklineTableData.length, sparklineTableData[sparklineTableData.length -1])
 
-      setDisplayData(context.tableData)
+
+      setDisplayData(sparklineTableData)
+      setLastStation(sparklineTableData[sparklineTableData.length -1])
     }
   },[context.tableData])
+
+  useEffect(()=>{
+    console.log('tableRef', tableRef, tableRef.current?.clientHeight)
+  },[tableRef])
+
+  function makeDataColumns(params){
+    console.log('last station', lastStation)
+    console.log('made columsn', makeColumns(params))
+    return makeColumns(params, lastStation.stnId, context.setDoneProcessing)
+  }
 
   // useEffect(() => {
   //   if(apiRef && apiRef.current){
@@ -155,9 +197,20 @@ export default function DataDisplayTable() {
   //   }
   // }, [apiRef]);
 
+      // console.log('apiRef', apiRef)
+
+
+  //   useEffect(() => {
+  //     console.log('page size elector', gridPageSizeSelector(apiRef))
+  //   // if(apiRef && apiRef.current){
+  //   //   console.log('apiRef', apiRef)
+  //   //   console.log('apiRef.current', apiRef.current)
+  //   // }
+  // }, [apiRef]);
+
   
   const handleSwitch =(event)=>{
-    console.log('handle switch event from parent component this is the event value', event)
+    // console.log('handle switch event from parent component this is the event value', event)
     setSwitchState(event)
     setColumnVisibilityDispatcher({type:'switchChange', payload: event})
   }
@@ -173,9 +226,10 @@ export default function DataDisplayTable() {
     return (
       <Box sx={initialObj}>
           <Grid item xs={12} lg={12} sx={{ width: '100%', height:'3500px' }}>
-          <Paper elevation={0} sx={{ width: '100%', height:'3500px' }}>
+          <Paper elevation={0} sx={{ width: '100%', height:'100%' }} ref={tableRef} >
             <DataGrid 
-              columns={makeColumns()}
+              
+              columns={makeDataColumns()}
               rows= {displayData} 
               filterModel={filterModel}
               onFilterModelChange={(newFilterModel) => setFilterModel(newFilterModel)}
@@ -185,8 +239,8 @@ export default function DataDisplayTable() {
               }
               components={{ Toolbar: CustomToolbar }} 
               componentsProps={{ toolbar: { switchhandler: handleSwitch } }}
-              density = {'compact'}
-              autoHeight = {true}
+              density = {'comfortable'}
+              autoHeight = {false}
               rowHeight={35}
               headerHeight = {80}
               sx={{
@@ -294,7 +348,8 @@ function periodToNum(period){
   return monNum1 && monNum2 ? `${monNum1}-${monNum2}` : false
 }
 
-function makeColumns(params){
+function makeColumns(params, lastStation, setter){
+  console.log('starting columns', lastStation)
   const columns = [
     {
       field:'state',
@@ -331,43 +386,75 @@ function makeColumns(params){
       field:'riverName',
       headerName:'River',
       minWidth:50,
-      flex: 0.8
+      flex: 0.5
 
     },
     {
       field:'riverLocation',
       headerName:'Location',
-      minWidth:250,
-      flex: 1
+      minWidth:75,
+      flex: 0.5
 
     },
     {
       field:'period',
       headerName:'Fcst Period',
       flex: 0.3,
-      // maxWidth: 50
+      maxWidth: 75
     },
     {
       field:'rfcData',
       headerName:'CBRFC Fcst (KAF)',
       flex: 0.3,
-      // maxWidth: 70
+      // minWidth: 75,
+      
+      maxWidth: 70
     },
     {
       field:'rfcAvg30',
       headerName:'CBRFC Avg (KAF)',
       flex: 0.3,
-      // maxWidth: 70
+      maxWidth: 60
     },
     {
       field:'rfcpavg30',
       headerName:'RFC % of Avg',
-      flex: 0.3,
-      // maxWidth: 65,
-      cellClassName: (params) => { 
-        return clsx('super-app', 
-        returnColorObjectPercent(params)
-        )}
+      flex: 1,
+      // minWidth: 75,
+      maxWidth:140,
+
+      renderCell:(params) =>{
+        // const chartData = getChartData(params)
+        // console.log('is last station', lastStation, params.id, lastStation === params.id)
+        // if(lastStation === params.id){
+        //   setter(true)
+        // }
+        let chartData
+        const stringPeriod = numberPeriodtoStringPeriod(params.row.period)
+        const stringData = sparklineData?.[params.id]?.[stringPeriod]
+        const numberData = sparklineData?.[params.id]?.[params.row.period]
+        let dataField = [params.field]
+        if(stringData || numberData){
+          if(params.field === 'rfcpavg30'){
+            chartData = stringData ? stringData?.['rfcNormals']?.['pavg'] : numberData?.['rfcNormals']?.['pavg']
+            // console.log('ugh', chartData['rfcNormals']?.['pavg'])
+            
+          }
+        }
+        // console.log('cbrfc string period', stringPeriod, stringData)
+        // console.log('cbrfc numberData period', params.row.period, numberData)
+        // console.log('cbrfc cartData', chartData)
+        // console.log('cbrfc fileld',[params.field] )
+        // console.log('cbrfc station data', sparklineData[params.id])
+
+        // console.log('cbrfc percent data', chartData, 'params', params, sparklineData[params.id])
+        if(chartData){
+          return <SparkLine data={chartData}/>
+        }
+        else{
+          return <></>
+        }
+      } 
       },
       {
         field:'rfcMed30',
@@ -389,8 +476,11 @@ function makeColumns(params){
     {
       field:'nrcsData',
       headerName:'NRCS Fcst (KAF)',
-      flex: 0.3,
-      // maxWidth: 60
+      maxWidth: 50,
+      flex: 0.2,
+      // minWidth: 75,
+      maxWidth:70,
+
     },
     {
       field:'nrcsMed30',
@@ -413,61 +503,113 @@ function makeColumns(params){
       field:'nrcsAvg30',
       headerName:'NRCS Avg (KAF)',
       flex: 0.3,
-      // maxWidth: 70
+      maxWidth: 60
     },
     {
       field:'nrcspavg30',
       headerName:'NRCS % of Avg',
-      flex: 0.3,
-      // maxWidth: 65,
-      cellClassName: (params) => { 
-        // console.log('params', params)
-        return clsx('super-app', 
-          returnColorObjectPercent(params)
-        )}
+      flex: 1,
+      // minWidth: 75,
+      maxWidth:140,
+
+      renderCell:(params) =>{
+        const chartData = getChartData(params)
+        if(chartData){
+          return <SparkLine data={chartData}/>
+        }
+        else{
+          return <></>
+        }
+      } 
     },
     {
       field:'diff',
       headerName:'Difference (NRCS-RFC)',
-      flex: 0.3,
-      // maxWidth: 75,
-      cellClassName: (params) => { 
-        // console.log('params', params)
-        return clsx('super-app', 
-          returnColorObject(params)
-        )},
+      flex: 1,
+      // minWidth: 75,
+      maxWidth:140,
       renderCell:(params) =>{
-        if(params.value !== 'na'){
-          return params.value
+        const chartData = getChartData(params)
+        if(chartData){
+          return <SparkLine data={chartData} colorType = {'absolute'}/>
         }
         else{
-          return <><Tooltip title={diffDescriber} placement="bottom" arrow>
-          <IconButton>
-            <HelpCenterIcon fontSize="small"/>
-          </IconButton>
-        </Tooltip>
-            N/A
-        </>
+          return <></>
         }
       }  
     },
     {
       field:'diffPct',
       headerName:'Diff %',
-      flex: 0.3,
-      renderCell: params=>{
-        return params.value!== 'na' ? params.value : ''
-      },
+      flex: 1,
+      // minWidth: 75,
+      maxWidth:140,
+      renderCell:(params) =>{
+        const chartData = getChartData(params)
+        if(chartData){
+          return <SparkLine data={chartData}/>
+        }
+        else{
+          return <></>
+        }
+      } 
       // maxWidth: 40,
-      cellClassName: (params) => { 
-        // console.log('params', params)
-        return clsx('super-app', 
-          returnColorObject(params)
-        )},
+      // cellClassName: (params) => { 
+      //   // console.log('params', params)
+      //   return clsx('super-app', 
+      //     returnColorObject(params)
+      //   )},
     },
   ]
-
+  console.log('finished')
   return columns
+}
+
+function getChartData(params){
+  const stringPeriod = numberPeriodtoStringPeriod(params.row.period)
+  let thisData
+  if(sparklineData[params.id]){
+    let chartData
+    // console.log('params', params)
+    // console.log('data', sparklineData[params.id])
+    // console.log('data1', sparklineData[params.id][stringPeriod])
+    // console.log('dataa2', sparklineData[params.id][params.row.period])
+    const stringData = sparklineData?.[params.id]?.[stringPeriod]
+    const numberData = sparklineData?.[params.id]?.[params.row.period]
+    if(stringData || numberData){
+      if(params.field === 'rfcpavg30'){
+        chartData = stringData ? stringData?.['rfcNormals']?.['pavg'] : numberData?.['rfcNormals']?.['pavg']
+      }
+      else if(params.field === 'nrcspavg30'){
+        chartData = stringData ? stringData?.['nrcsNormals']?.['pavg'] : numberData?.['rfcNormals']?.['pavg']
+        // console.log('in nrcsavg30', chartData)
+      }
+      else{
+        chartData = stringData ? stringData[params.field] : numberData[params.field]
+      }
+    }
+    if(chartData){
+      const notNullData = chartData.filter(curr => curr !== null)
+      if(notNullData.length >0){
+          thisData = chartData
+          // console.log('this data', thisData)
+        }
+    }
+    // const periodSparklineData = sparklineData[params.id][stringPeriod]
+    //   ? sparklineData[params.id][stringPeriod]
+    //     : sparklineData[params.id][params.row.period]
+    //       ? sparklineData[params.id][params.row.period]
+    //         : undefined
+    // if(periodSparklineData && periodSparklineData[params.field]){
+    //   const notNullData = periodSparklineData[params.field].filter(curr => curr !== null)
+    //   if(notNullData.length >0){
+    //     thisData = periodSparklineData[params.field]
+    //     console.log('this data', thisData)
+    //   }
+    //   // console.log('sparklineData', periodSparklineData[params.field], notNullData.length)
+    // }
+  }
+  return thisData
 }
 // if(rest){
 //   if(rest.period){
