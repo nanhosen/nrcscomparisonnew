@@ -1,7 +1,7 @@
 {
   "name": "fcst-compare-table",
   "version": "0.1.0",
-  "homepage": "https://www.cbrfc.noaa.gov/dbdata/station/info/nrcsCompare",
+  "homepage": "https://www.cbrfc.noaa.gov/dbdata/station/info/nrcsCompare/charts",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.7.1",

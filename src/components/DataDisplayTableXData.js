@@ -69,16 +69,17 @@ function basinComparator(a, b){
   return sortResult 
 }
 function CustomToolbar(props) {
-  // console.log('toolbar props', props)
+  console.log('toolbar props', props)
+  const {switchhandler, ...rest} = props
   return (
-    <GridToolbarContainer {...props}>
+    <GridToolbarContainer {...rest}>
     <Box pt={0.18}>
       <GridToolbarColumnsButton />
       <GridToolbarFilterButton />
       <GridToolbarDensitySelector />
       <GridToolbarExport />
     </Box>
-      <TableStatsSwitch switchhandler={props.switchhandler}/>
+      <TableStatsSwitch switchhandler={switchhandler}/>
       <TableTypeSwitch />
     </GridToolbarContainer>
   );
@@ -124,7 +125,7 @@ export default function DataDisplayTable() {
   const apiRef = useGridApiRef()
   const initialSwitchValue = false
   const [displayData, setDisplayData]=useState()
-  const [statType, setStatType]=useState('average')
+  const [statType, setStatType]=useState(context.normalType)
   const [switchState, setSwitchState]= useState(initialSwitchValue)
   const [columnVisibilityModel, setColumnVisibilityDispatcher] = useReducer(columnVisibilityReducer, initialColumnModel)
   const [filterModel, setFilterModel] = useState({
@@ -145,6 +146,10 @@ export default function DataDisplayTable() {
       setDisplayData(context.tableData)
     }
   },[context.tableData])
+
+  useEffect(()=>{
+    setStatType(context.normalType)
+  },[context.normalType])
 
   // useEffect(() => {
   //   if(apiRef && apiRef.current){
@@ -180,11 +185,14 @@ export default function DataDisplayTable() {
               filterModel={filterModel}
               onFilterModelChange={(newFilterModel) => setFilterModel(newFilterModel)}
               columnVisibilityModel={columnVisibilityModel}
-              onColumnVisibilityModelChange={(newModel) =>
-                setColumnVisibilityDispatcher({type:'mysteriousChange', payload: switchState})
-              }
-              components={{ Toolbar: CustomToolbar }} 
-              componentsProps={{ toolbar: { switchhandler: handleSwitch } }}
+              // onColumnVisibilityModelChange={(newModel) =>
+              //   setColumnVisibilityDispatcher({type:'mysteriousChange', payload: switchState})
+              // }
+              components={{ Toolbar: CustomToolbar }}
+              componentsProps={{
+                toolbar: { statType },
+              }} 
+              // componentsProps={{ toolbar:'average' }}
               density = {'compact'}
               autoHeight = {true}
               rowHeight={35}

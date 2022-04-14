@@ -581,7 +581,7 @@ function getChartData(params){
         chartData = stringData ? stringData?.['rfcNormals']?.['pavg'] : numberData?.['rfcNormals']?.['pavg']
       }
       else if(params.field === 'nrcspavg30'){
-        chartData = stringData ? stringData?.['nrcsNormals']?.['pavg'] : numberData?.['rfcNormals']?.['pavg']
+        chartData = stringData ? stringData?.['nrcsNormals']?.['pavg'] : numberData?.['nrcsNormals']?.['pavg']
         // console.log('in nrcsavg30', chartData)
       }
       else{
