@@ -133,6 +133,7 @@ const AntSwitchOrig = styled(Switch)(({ theme }) => ({
 }));
 
 export default function TableStatsSwitch(props) {
+  const {dispatcher, ...rest} = props
   // console.log('statsprops', props)
   const context = useContext(TableContext)
   
@@ -143,7 +144,7 @@ export default function TableStatsSwitch(props) {
 
       <Stack direction="row" spacing={1} alignItems="center"   pl={1} pt={0.1}>
         <Typography  variant="button" sx={{color:'#1976d2'}} >Average</Typography>
-        <AntSwitchOrig  inputProps={{ 'aria-label': 'ant design' }} onChange={(event)=>{props.switchhandler(event.target.checked)}}  />
+        <AntSwitchOrig  inputProps={{ 'aria-label': 'ant design' }} onChange={(event)=>{dispatcher({type:'statType', payload: event.target.checked})}}  />
         <Typography  variant="button" sx={{color:'#1976d2'}} >Median</Typography>
       </Stack>
     </FormGroup>

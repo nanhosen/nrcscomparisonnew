@@ -1,11 +1,24 @@
 {
   "name": "fcst-compare-table",
   "version": "0.1.0",
-  "homepage": "https://www.cbrfc.noaa.gov/dbdata/station/info/nrcsCompare/charts",
+  "homepage": "https://www.cbrfc.noaa.gov/dbdata/station/info/nrcsCompare",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.7.1",
     "@emotion/styled": "^11.6.0",
+    "@fontsource/aileron": "^4.5.3",
+    "@fontsource/arvo": "^4.5.5",
+    "@fontsource/cardo": "^4.5.7",
+    "@fontsource/fjalla-one": "^4.5.7",
+    "@fontsource/hind": "^4.5.6",
+    "@fontsource/karla": "^4.5.5",
+    "@fontsource/lora": "^4.5.6",
+    "@fontsource/montserrat": "^4.5.7",
+    "@fontsource/nunito": "^4.5.8",
+    "@fontsource/open-sans": "^4.5.8",
+    "@fontsource/oxygen": "^4.5.5",
+    "@fontsource/quattrocento-sans": "^4.5.5",
+    "@fontsource/raleway": "^4.5.5",
     "@mui/icons-material": "^5.2.5",
     "@mui/material": "^5.2.8",
     "@mui/styled-engine-sc": "^5.1.0",
@@ -15,6 +28,7 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^0.25.0",
     "axios-hooks": "^3.0.1",
+    "babel-plugin-transform-react-jsx-source": "^6.22.0",
     "clsx": "^1.1.1",
     "eslint-plugin-react-hooks": "^4.2.1-rc.2-next-577f2de46-20220320",
     "highcharts": "^10.0.0",
@@ -33,7 +47,12 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "webpack": "webpack",
+    "webpack-dev-server": "webpack-dev-server",
+    "dev": "npm run webpack-dev-server -- --env mode=development",
+    "prod": "npm run webpack -- --env mode=production",
+    "prodTest": "npm run webpack-dev-server -- --env mode=production"
   },
   "eslintConfig": {
     "extends": [
@@ -52,5 +71,29 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.17.9",
+    "@babel/plugin-transform-react-jsx-source": "^7.16.7",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-react": "^7.16.7",
+    "babel-loader": "^8.2.4",
+    "babel-plugin-syntax-dynamic-import": "^6.18.0",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
+    "css-loader": "^6.7.1",
+    "file-loader": "^6.2.0",
+    "html-webpack-plugin": "^5.5.0",
+    "mini-css-extract-plugin": "^2.6.0",
+    "optimize-css-assets-webpack-plugin": "^6.0.1",
+    "react-hot-loader": "^4.13.0",
+    "react-loadable": "^5.5.0",
+    "sass-loader": "^12.6.0",
+    "style-loader": "^3.3.1",
+    "url-loader": "^4.1.1",
+    "webpack": "^5.72.0",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.8.1",
+    "webpack-merge": "^5.8.0"
   }
 }

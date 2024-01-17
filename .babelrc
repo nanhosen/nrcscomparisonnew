@@ -1,0 +1,57 @@
+
+{
+  "presets": [
+      "@babel/preset-react",
+      [
+          "@babel/preset-env",
+          {
+              "targets": {
+                  "browsers": "last 2 versions"
+              },
+              "modules": false,
+              "loose": false
+          }
+      ]
+  ],
+  "plugins": [
+      "transform-class-properties",
+      "react-hot-loader/babel",
+      "@babel/plugin-transform-react-jsx-source"
+  ],
+  "env": {
+      "test": {
+          "plugins": [
+              "transform-es2015-modules-commonjs"
+          ]
+      }
+  }
+}
+
+// // .babelrc
+// {
+//   "presets": [
+//     "@babel/preset-react",
+//     [
+//      "@babel/preset-env",
+//       {
+//         "targets": {
+//           "browsers": "last 2 versions"
+//         },
+//         "modules": false,
+//         "loose": false
+//       }
+//     ]
+//   ],
+//   "plugins": [
+//     "transform-class-properties",
+//     "react-hot-loader/babel",
+//     "syntax-dynamic-import"
+//   ],
+//   "env": {
+//     "test": {
+//       "plugins": [
+//         "transform-es2015-modules-commonjs"
+//       ]
+//    }
+//   }
+// }

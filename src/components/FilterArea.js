@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useContext, useReducer} from 'react';
+import React, {useEffect, useState, useContext, useLayoutEffect, useRef} from 'react';
 import TableContext from '../contexts/TableContext'
 // import DataSourceFilter from './DataSourceFilter';
 import Divider from '@mui/material/Divider';
@@ -21,8 +21,9 @@ export default function FilterArea(props){
   // const [buttonConfig, setButtonConfig] = useState(areaData)
   const [dynamicButtonConfig, setDynamicButtonConfig] = useState()
   // const [reducerButtonConfig, dispatch] = useState(reducer, {})
-  const [monthWidth, setMonthWidth] = useState(210)
+  const [monthWidth, setMonthWidth] = useState(100)
   // const [{ data:requestData, loading, error }, refetch] = useAxios(`https://cbrfc.noaa.gov/dbdata/ndb/nrcsData/${viewField}/${requestObj}`)
+  const monthRef = useRef(null)
 
   const handleFormat = (newFormats, stateKey, dispatchFn) => {
     // console.log('handleFormat', event, section, newFormats, setterObj)
@@ -39,8 +40,17 @@ export default function FilterArea(props){
     // }
   };
   useEffect(()=>{
-    console.log('context', context)
+    // console.log('context', context)
   },[context])
+
+  // useLayoutEffect(() => {
+  //   // setWidth(ref.current.offsetWidth);
+  //   // setHeight(ref.current.offsetHeight);
+  //   if( monthRef?.current?.clientWidth){
+  //     console.log('refwidth', monthRef, monthRef.current, monthRef?.current?.clientWidth)
+  //     setMonthWidth(monthRef?.current?.clientWidth)
+  //   }
+  // },[monthRef.current]);
 
   // useEffect(async()=>{
   //   // console.log('view m onths', dataDates[context.dataFilters.viewYear])
@@ -65,7 +75,10 @@ export default function FilterArea(props){
   //   }
     
   // },[context.dataFilters.viewYear])
-  
+  useEffect(()=>{
+    console.log('context', context)
+  },[context])
+
   useEffect(()=>{
     async function makeConfig(){
 
@@ -83,8 +96,9 @@ export default function FilterArea(props){
       //   year: {state: context.dataFilters.viewYear, setter: context.setViewYear}
       // }
       let monthAr
+      // plus sign in front of viewYear converts a string to a number if it can
       if(new Date().getFullYear() === +context.dataFilters.viewYear ||( dataDates && dataDates[context.dataFilters.viewYear] && !dataDates[context.dataFilters.viewYear]['months'])){
-        const theseDates = await getData(`https://cbrfc.noaa.gov/dbdata/ndb/dataMonths/${context.dataFilters.viewYear}`)
+        const theseDates = await getData(`https://www.cbrfc.noaa.gov/dbdata/ndb/dataMonths/${context.dataFilters.viewYear}`)
         if(theseDates?.data?.data){
           // console.log('theseDates', theseDates.data.data)
           monthAr = theseDates.data.data
@@ -95,9 +109,13 @@ export default function FilterArea(props){
       }
       if(dataForConfig){
         const newConfigData = {...dataForConfig}
-        newConfigData.month.dataAr = monthAr.sort((a,b)=>a-b)
+        // console.log('monthAr', monthAr)
+        newConfigData.month.dataAr = monthAr && monthAr.length >0 ? monthAr.sort((a,b)=>a-b) : undefined
         const calcedConfig = makeButtonConfig(newConfigData)
-        // console.log('calcedConfig', calcedConfig)
+        const monthWidth = getMonthWidth(monthAr)
+        setMonthWidth(monthWidth)
+        // console.log('monthWieth', monthWidth)
+        console.log('calcedConfig', calcedConfig)
         setDynamicButtonConfig(calcedConfig)
       }
       else{
@@ -117,9 +135,10 @@ export default function FilterArea(props){
     // const area width should be 519
     // console.log('dynamic', dynamicButtonConfig)
     return(
-      <Box sx={{ flexGrow: 1 }}>
+      <Box sx={{ flexGrow: 1, pt: 1}}>
         <Grid container spacing={1} >
-          <Grid item xs={6} sm={6} md={3} sx={{minWidth:'519px'}}>
+          <Grid item xs={6} sm={6} md={5} >
+          {/* <Grid item xs={6} sm={6} md={3} sx={{minWidth:'519px'}}> */}
             <Paper elevation={0}>
               <ListInner 
                 label={dynamicButtonConfig?.area.title} 
@@ -136,8 +155,9 @@ export default function FilterArea(props){
               />
             </Paper>
           </Grid> 
-          <Grid item xs={1} sm={1} md={1} maxWidth={'xs'} sx={ {minWidth:`${monthWidth}px`}}>
-            <Paper elevation={0}>
+          <Grid item xs={2} sm={2} md={2} ref={monthRef}>
+          {/* <Grid item xs={1} sm={1} md={1} maxWidth={'xs'} sx={ {minWidth:`${monthWidth}px`}} ref={monthRef}> */}
+            <Paper elevation={0}  ref={monthRef}>
               <ListInner 
                 label={dynamicButtonConfig?.month.title} 
                 buttons = {dynamicButtonConfig?.month.buttonData} 
@@ -153,7 +173,8 @@ export default function FilterArea(props){
               />
             </Paper>
           </Grid>
-          <Grid item xs={1} sm={1} md={1} sx={{minWidth:'190px'}}>
+          <Grid item xs={2} sm={2} md={2} >
+          {/* <Grid item xs={1} sm={1} md={1} sx={{minWidth:'190px'}}> */}
             <Paper elevation={0}>
               <ListInner 
                 label={dynamicButtonConfig?.year.title} 
@@ -162,7 +183,7 @@ export default function FilterArea(props){
                 exclusive={true}
                 section={'year'}
                 handleFormat = {handleFormat}
-                value = {context.dataFilters.viewYear}
+                value = {`${context.dataFilters.viewYear}`}
                 // setterObj = {dynamicButtonConfig?.year?.setterObj}
                 stateKey = {dynamicButtonConfig?.year?.buttonStateKey}
                 dispatchFn = {context.filterDispatch}
@@ -170,7 +191,8 @@ export default function FilterArea(props){
               />
             </Paper>
           </Grid>
-          <Grid item xs={1} sm={1} md={1} sx={{minWidth:'290px'}}>
+          {/* <Grid item xs={1} sm={1} md={1} sx={{minWidth:'290px'}}> */}
+          <Grid item xs={2} sm={2} md={2} >
             <Paper elevation={0}>
               <ListInner 
                 label={dynamicButtonConfig?.probability.title} 
@@ -189,7 +211,7 @@ export default function FilterArea(props){
           </Grid>
                 
             
-          <Grid item xs={1} sm={1} md={1} sx={{minWidth:'160px'}}>
+          {/* <Grid item xs={1} sm={1} md={1} sx={{minWidth:'160px'}}>
             <Paper elevation={0}>
               <ListInner 
                 label={dynamicButtonConfig?.dataSource.title} 
@@ -205,7 +227,7 @@ export default function FilterArea(props){
 
               />
             </Paper>
-          </Grid>
+          </Grid> */}
           {/* <Grid item xs={1} sm={1} md={1} >
             <Paper elevation={0}>
               <Residual />
@@ -250,7 +272,7 @@ function ListInner(props){
   return(
     <>
       <Divider textAlign="left">
-      <Typography variant="overline">
+      <Typography variant="overline"  sx={{fontSize:"0.9rem"}}>
         {props.label}
       </Typography> 
       </Divider>
@@ -265,7 +287,8 @@ function ListInner(props){
         color="primary"
         disabled = {props.disabledStatus}
         exclusive = {props.exclusive}
-        fullWidth= {true}
+        fullWidth= {false}
+        size = "small"
       >
           {
             props.buttons.map(
@@ -297,12 +320,10 @@ function makeButtonConfig(dataForConfig){
       this.labelObj = labelObj
       this.buttonStateKey = buttonStateKey 
     }
-    noLabelFn(){return this.dataAr.map(curr => { return { label: curr, abbrev: curr } })}
-    labelFn(){return this.dataAr.map(curr => { return { label: this.labelObj[curr], abbrev: curr } })}
+    noLabelFn(){return this.dataAr && this.dataAr.length >0 ? this.dataAr.map(curr => { return { label: curr, abbrev: curr } }): [] }
+    labelFn(){return this.dataAr && this.dataAr.length >0 ? this.dataAr.map(curr => { return { label: this.labelObj[curr], abbrev: curr } }): [] }
     get buttonObj(){
       const buttonData = this.labelObj ? this.labelFn() : this.noLabelFn()
-      // console.log('gutton dta from button obj', buttonData, 'this in buttonObj', this)
-      // console.log('returnig this', {title: this.title, buttonData, setterObj: this.setterObj})
       return {title: this.title, buttonData, buttonStateKey:this.buttonStateKey}
     }
 
@@ -315,6 +336,28 @@ function makeButtonConfig(dataForConfig){
     dynamicMasterObj[key] =constructorReturn.buttonObj
   }
   return dynamicMasterObj
+}
+
+function getMonthWidth(monthAr){
+  const widthConfig = {
+    2:150,
+    3:150,
+    4:250,
+    5: 350
+  }
+  if(!monthAr){
+    // console.log('no monthAr')
+    return 300
+  }
+  else{
+    // console.log('month ar length', monthAr.length)
+    if(monthAr.length && widthConfig[monthAr.length]){
+      return widthConfig[monthAr.length]
+    }
+    else{
+      return 300
+    }
+  }
 }
 
 // const dataForConfig = {

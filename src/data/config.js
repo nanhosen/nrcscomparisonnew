@@ -30,8 +30,11 @@ const probabilityLabelObj = {
 // }
 
 const dataDates = {
+  2020: {months:[4,3,2,1]},
   2021: {months:[4,3,2,1]},
-  2022: {months:[3,2,1]},
+  2022: {months:[4,3,2,1]},
+  2023: {months:[4,3,2,1]},
+  2024: {months:[1]}
 }
 const monthLabelObj = {
   1: 'JAN',

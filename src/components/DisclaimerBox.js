@@ -14,6 +14,7 @@ export default function DisclaimerBox() {
       <Collapse in={open}>
         <Alert
           severity="info"
+          variant='outlined'
           action={
             <IconButton
               aria-label="close"

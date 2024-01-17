@@ -1,6 +1,7 @@
 export default function formatTableData({serverData, dataSource, basinFilters, viewMonth}){
 
   const fullDataAr = []
+  // console.log('serverData', serverData.data)
   if(serverData.data){
     const fullDataset = serverData.data
     // console.log(fullDataset)
@@ -10,6 +11,9 @@ export default function formatTableData({serverData, dataSource, basinFilters, v
     for (const [stnId, stnDataAr] of Object.entries(fullDataset)) {
       id = id + 1
       const stationData = stnDataAr[0]
+      if(stnId =='SRYU1'){
+        console.log('station data syru1', stationData)
+      }
       if(stationData){
         // console.log('stationdata', stationData)
         const {metadata, nrcsData: nrcsData1, diff: fullDiff, period, diffPct: fullPct,  stnNrcsData, nrcsNormals, rfcNormals, ...notMetadata} = stationData
@@ -25,7 +29,7 @@ export default function formatTableData({serverData, dataSource, basinFilters, v
         // rfcpavg30
         // nrcspavg30
         // const diffPct = fullPct ? Math.round(fullPct) : undefined
-        let diff = fullDiff? Math.round(fullDiff) : undefined
+        let diff = fullDiff? Math.round(fullDiff * 10)/10 : undefined
         const periodNum = period ? periodToNum(period) : undefined
         const {pavg: rfcpavg30, pmed: rfcpmed30, avg30: rfcAvg30, med30: rfcMed30} = rfcNormals ? rfcNormals :  {}
         const {pavg: nrcspavg30, pmed: nrcspmed30, avg30: nrcsAvg30, med30: nrcsMed30} = nrcsNormals ? nrcsNormals : {}
@@ -78,7 +82,7 @@ export default function formatTableData({serverData, dataSource, basinFilters, v
         }
       }  
     }
-    console.log(incompStns.length, 'incommp stations', JSON.stringify(incompStns))
+    // console.log(incompStns.length, 'incommp stations', JSON.stringify(incompStns))
   }
   return fullDataAr
 }

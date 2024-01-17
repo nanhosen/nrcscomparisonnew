@@ -18,6 +18,10 @@ import {
 import Paper from '@mui/material/Paper';
 import { Grid, Box, Typography, Switch } from '@mui/material';
 import clsx from 'clsx';
+import SparkLine from './Sparkline';
+import { sparklineData } from '../data/sparklineData';
+import {numberPeriodtoStringPeriod} from '../utils/dateUtils';
+
 // import HelpOutlineIcon from '@mui/icons-material/Delete';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import HelpCenterIcon from '@mui/icons-material/HelpCenter';
@@ -70,16 +74,16 @@ function basinComparator(a, b){
 }
 function CustomToolbar(props) {
   console.log('toolbar props', props)
-  const {switchhandler, ...rest} = props
+  const {normalType, dispatcher,  ...rest} = props
   return (
-    <GridToolbarContainer {...rest}>
-    <Box pt={0.18}>
-      <GridToolbarColumnsButton />
-      <GridToolbarFilterButton />
-      <GridToolbarDensitySelector />
-      <GridToolbarExport />
-    </Box>
-      <TableStatsSwitch switchhandler={switchhandler}/>
+    <GridToolbarContainer >
+      <Box pt={0.18}>
+        <GridToolbarColumnsButton />
+        <GridToolbarFilterButton />
+        <GridToolbarDensitySelector />
+        <GridToolbarExport />
+      </Box>
+      <TableStatsSwitch dispatcher = {dispatcher}/>
       <TableTypeSwitch />
     </GridToolbarContainer>
   );
@@ -124,7 +128,9 @@ export default function DataDisplayTable() {
   const context = useContext(TableContext)
   const apiRef = useGridApiRef()
   const initialSwitchValue = false
-  const [displayData, setDisplayData]=useState()
+  const [displayDataDeprecated, setDisplayData]=useState()
+  const [lastStation, setLastStation] = useState()
+
   const [statType, setStatType]=useState(context.normalType)
   const [switchState, setSwitchState]= useState(initialSwitchValue)
   const [columnVisibilityModel, setColumnVisibilityDispatcher] = useReducer(columnVisibilityReducer, initialColumnModel)
@@ -137,19 +143,67 @@ export default function DataDisplayTable() {
       },
     ],
   })
-       
+
+  function makeDataColumns(params){
+    // console.log('last station', lastStation)
+    // console.log('made columsn', makeColumns(params))
+    return makeColumns(params, context.tableType)
+  }
+
+  const memoDisplayData = useMemo(()=>{
+    if(context.tableData){
+      console.log('table data is here')
+      if(context.tableType === 'chart'){
+        const stns = ["AFPU1","ASHU1","BCTU1","BERU1","BEVU1","BFFU1","BNRU1","BRUU1","CASU1","CCDU1","CCSU1","CIVU1","CLLU1","CLRU1","COAU1","CRAU1","CRUU1","DADU1","DCRU1","DELU1","DOLU1","DURU1","ECBU1","ECRU1","ELLU1","MIU1","FCNU1","FRRU1","GATU1","GRNU1","GRVU1","HATU1","HPBU1","HRMU1","HURU1","JOVU1","LAAU1","LAMU1","LCTU1","LGNU1","MAAU1","CMU1","MDCU1","MILU1","MYRU1","NEUU1","OAWU1","OGHU1","PINU1","PIUU1","PRLU1","PRZU1","PVHU1","RBCU1","RKUU1","ROKU1","SAYU1","CMU1","SEKU1","SFRU1","SFSU1","SRKU1","SRYU1","STAU1","STCU1","STIU1","SZZU1","TADU1","USTU1","10166605","VCVU1","VIRU1","WATU1","WCGU1","WESU1","WFDU1","WOOU1","WRSU1","WTRU1","YLLU1","9219750","9291000","9329050","9337000","0023000","0133800","0146000","0172952","0173450"]
+        const sparklineTableData = context.tableData.filter(curr=>{
+          // console.log('curr', curr, curr.id)
+          return stns.indexOf(curr.id)>=0
+        })
+        
+        console.log(sparklineTableData.length, sparklineTableData[sparklineTableData.length -1])
+
+
+        return sparklineTableData
+      }
+      else if(context.tableType ==='data'){
+        return context.tableData
+      }
+      else{
+        throw new Error('invalid table type', context.tableType)
+      } //data
+
+    }
+  },[context.tableData, context.tableType])
   useEffect(()=>{
     // console.log('context', context.tableData)
     if(context.tableData){
       console.log('table data is here')
+      if(context.tableType === 'chart'){
+        const stns = ["AFPU1","ASHU1","BCTU1","BERU1","BEVU1","BFFU1","BNRU1","BRUU1","CASU1","CCDU1","CCSU1","CIVU1","CLLU1","CLRU1","COAU1","CRAU1","CRUU1","DADU1","DCRU1","DELU1","DOLU1","DURU1","ECBU1","ECRU1","ELLU1","MIU1","FCNU1","FRRU1","GATU1","GRNU1","GRVU1","HATU1","HPBU1","HRMU1","HURU1","JOVU1","LAAU1","LAMU1","LCTU1","LGNU1","MAAU1","CMU1","MDCU1","MILU1","MYRU1","NEUU1","OAWU1","OGHU1","PINU1","PIUU1","PRLU1","PRZU1","PVHU1","RBCU1","RKUU1","ROKU1","SAYU1","CMU1","SEKU1","SFRU1","SFSU1","SRKU1","SRYU1","STAU1","STCU1","STIU1","SZZU1","TADU1","USTU1","10166605","VCVU1","VIRU1","WATU1","WCGU1","WESU1","WFDU1","WOOU1","WRSU1","WTRU1","YLLU1","9219750","9291000","9329050","9337000","0023000","0133800","0146000","0172952","0173450"]
+        const sparklineTableData = context.tableData.filter(curr=>{
+          // console.log('curr', curr, curr.id)
+          return stns.indexOf(curr.id)>=0
+        })
+        
+        console.log(sparklineTableData.length, sparklineTableData[sparklineTableData.length -1])
 
-      setDisplayData(context.tableData)
+
+        setDisplayData(sparklineTableData)
+        setLastStation(sparklineTableData[sparklineTableData.length -1])
+      }
+      else if(context.tableType ==='data'){
+        setDisplayData(context.tableData)
+      }
+      else{
+        throw new Error('invalid table type', context.tableType)
+      } //data
+
     }
-  },[context.tableData])
+  },[context.tableData, context.tableType])
 
-  useEffect(()=>{
-    setStatType(context.normalType)
-  },[context.normalType])
+  // useEffect(()=>{
+  //   setStatType(context.normalType)
+  // },[context.normalType])
 
   // useEffect(() => {
   //   if(apiRef && apiRef.current){
@@ -172,7 +226,7 @@ export default function DataDisplayTable() {
   // },[columnVisibilityModel])
 
 
-  if(displayData){
+  if(memoDisplayData){
     
     
     return (
@@ -180,8 +234,8 @@ export default function DataDisplayTable() {
           <Grid item xs={12} lg={12} sx={{ width: '100%', height:'3500px' }}>
           <Paper elevation={0} sx={{ width: '100%', height:'3500px' }}>
             <DataGrid 
-              columns={makeColumns()}
-              rows= {displayData} 
+              columns={makeDataColumns()}
+              rows= {memoDisplayData} 
               filterModel={filterModel}
               onFilterModelChange={(newFilterModel) => setFilterModel(newFilterModel)}
               columnVisibilityModel={columnVisibilityModel}
@@ -190,7 +244,7 @@ export default function DataDisplayTable() {
               // }
               components={{ Toolbar: CustomToolbar }}
               componentsProps={{
-                toolbar: { statType },
+                toolbar: { normalType: context.normalType, dispatcher: setColumnVisibilityDispatcher },
               }} 
               // componentsProps={{ toolbar:'average' }}
               density = {'compact'}
@@ -302,8 +356,8 @@ function periodToNum(period){
   return monNum1 && monNum2 ? `${monNum1}-${monNum2}` : false
 }
 
-function makeColumns(params){
-  const columns = [
+function makeColumns(params, tableType){
+  const columnsInit = [
     {
       field:'state',
       headerName:'State',
@@ -367,15 +421,15 @@ function makeColumns(params){
       flex: 0.3,
       // maxWidth: 70
     },
-    {
+    { 
       field:'rfcpavg30',
       headerName:'RFC % of Avg',
       flex: 0.3,
       // maxWidth: 65,
-      cellClassName: (params) => { 
-        return clsx('super-app', 
-        returnColorObjectPercent(params)
-        )}
+      // cellClassName: (params) => { 
+      //   return clsx('super-app', 
+      //   returnColorObjectPercent(params)
+      //   )}
       },
       {
         field:'rfcMed30',
@@ -428,54 +482,162 @@ function makeColumns(params){
       headerName:'NRCS % of Avg',
       flex: 0.3,
       // maxWidth: 65,
-      cellClassName: (params) => { 
-        // console.log('params', params)
-        return clsx('super-app', 
-          returnColorObjectPercent(params)
-        )}
+      // cellClassName: (params) => { 
+      //   // console.log('params', params)
+      //   return clsx('super-app', 
+      //     returnColorObjectPercent(params)
+      //   )}
     },
     {
       field:'diff',
       headerName:'Difference (NRCS-RFC)',
       flex: 0.3,
       // maxWidth: 75,
-      cellClassName: (params) => { 
-        // console.log('params', params)
-        return clsx('super-app', 
-          returnColorObject(params)
-        )},
-      renderCell:(params) =>{
-        if(params.value !== 'na'){
-          return params.value
-        }
-        else{
-          return <><Tooltip title={diffDescriber} placement="bottom" arrow>
-          <IconButton>
-            <HelpCenterIcon fontSize="small"/>
-          </IconButton>
-        </Tooltip>
-            N/A
-        </>
-        }
-      }  
+      // cellClassName: (params) => { 
+      //   // console.log('params', params)
+      //   return clsx('super-app', 
+      //     returnColorObject(params)
+      //   )},
+      // renderCell:(params) =>{
+      //   if(params.value !== 'na'){
+      //     return params.value
+      //   }
+      //   else{
+      //     return <><Tooltip title={diffDescriber} placement="bottom" arrow>
+      //     <IconButton>
+      //       <HelpCenterIcon fontSize="small"/>
+      //     </IconButton>
+      //   </Tooltip>
+      //       N/A
+      //   </>
+      //   }
+      // }  
     },
     {
       field:'diffPct',
       headerName:'Diff %',
       flex: 0.3,
-      renderCell: params=>{
-        return params.value!== 'na' ? params.value : ''
-      },
-      // maxWidth: 40,
-      cellClassName: (params) => { 
-        // console.log('params', params)
-        return clsx('super-app', 
-          returnColorObject(params)
-        )},
+      // renderCell: params=>{
+      //   return params.value!== 'na' ? params.value : ''
+      // },
+      // // maxWidth: 40,
+      // cellClassName: (params) => { 
+      //   // console.log('params', params)
+      //   return clsx('super-app', 
+      //     returnColorObject(params)
+      //   )},
     },
   ]
-
+  const columns = []
+  columnsInit.map(currField =>{
+    let pushData
+    if(currField.field === 'rfcpavg30' || currField.field ==='nrcspavg30' || currField.field === 'diff'){
+      pushData = rfpavg30Fn(params, currField, tableType)
+    }
+    // else if(currField.field ==='nrcspavg30'){
+    //   pushData = nrcspavg30Fn(params, currField, tableType)
+    // }
+    else{
+      pushData = currField
+    }
+    columns.push(pushData)
+  })
   return columns
+}
+
+function rfpavg30Fn(params, initProps, tableType){
+  let nextProps = {...initProps}
+  if (tableType === 'chart'){
+    nextProps.renderCell = (params) =>{
+      const chartData = getChartData(params)
+      if(chartData){
+        return <SparkLine data={chartData} colorType = {initProps.field ==='diff' ? 'absolute' : 'percent'}/>
+      }
+      else{
+        return <></>
+      }
+    } 
+    nextProps.flex = 1
+    
+    return nextProps
+  }
+  else if(tableType === 'data'){
+    nextProps.cellClassName= (params) => { 
+      return clsx('super-app', 
+      returnColorObjectPercent(params)
+      )}
+  }
+  return nextProps
+}
+
+function nrcspavg30Fn(params, initProps, tableType){
+  let nextProps = {...initProps}
+  if (tableType ==='chart'){
+    nextProps.renderCell=(params) =>{
+      const chartData = getChartData(params)
+      if(chartData){
+        return <SparkLine data={chartData}/>
+      }
+      else{
+        return <></>
+      }
+    }
+  } 
+  else if(tableType === 'data'){
+    nextProps.cellClassName = (params) => { 
+      // console.log('params', params)
+      return clsx('super-app', 
+        returnColorObjectPercent(params)
+      )}
+    }
+  return nextProps  
+}
+
+function getChartData(params){
+  const stringPeriod = numberPeriodtoStringPeriod(params.row.period)
+  let thisData
+  if(sparklineData[params.id]){
+    let chartData
+    // console.log('params', params)
+    // console.log('data', sparklineData[params.id])
+    // console.log('data1', sparklineData[params.id][stringPeriod])
+    // console.log('dataa2', sparklineData[params.id][params.row.period])
+    const stringData = sparklineData?.[params.id]?.[stringPeriod]
+    const numberData = sparklineData?.[params.id]?.[params.row.period]
+    if(stringData || numberData){
+      if(params.field === 'rfcpavg30'){
+        chartData = stringData ? stringData?.['rfcNormals']?.['pavg'] : numberData?.['rfcNormals']?.['pavg']
+      }
+      else if(params.field === 'nrcspavg30'){
+        chartData = stringData ? stringData?.['nrcsNormals']?.['pavg'] : numberData?.['nrcsNormals']?.['pavg']
+        // console.log('in nrcsavg30', chartData)
+      }
+      else{
+        chartData = stringData ? stringData[params.field] : numberData[params.field]
+      }
+    }
+    if(chartData){
+      const notNullData = chartData.filter(curr => curr !== null)
+      if(notNullData.length >0){
+          thisData = chartData
+          // console.log('this data', thisData)
+        }
+    }
+    // const periodSparklineData = sparklineData[params.id][stringPeriod]
+    //   ? sparklineData[params.id][stringPeriod]
+    //     : sparklineData[params.id][params.row.period]
+    //       ? sparklineData[params.id][params.row.period]
+    //         : undefined
+    // if(periodSparklineData && periodSparklineData[params.field]){
+    //   const notNullData = periodSparklineData[params.field].filter(curr => curr !== null)
+    //   if(notNullData.length >0){
+    //     thisData = periodSparklineData[params.field]
+    //     console.log('this data', thisData)
+    //   }
+    //   // console.log('sparklineData', periodSparklineData[params.field], notNullData.length)
+    // }
+  }
+  return thisData
 }
 // if(rest){
 //   if(rest.period){

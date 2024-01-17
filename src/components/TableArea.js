@@ -6,13 +6,14 @@ import SparkLine from './Sparkline';
 import { LinearProgress } from '@mui/material';
 import Typography from '@mui/material/Typography';
 // import DataDisplayTable from './DataDisplayTableXData'
-const DataDisplayTable = React.lazy(() => import('./DataDisplayTableXData'));
+// const DataDisplayTable = React.lazy(() => import('./DataDisplayTableXData'));
+const DataDisplayTable = React.lazy(() => import('./DataDisplayTableXDataPreIntegration'));
 const SparklinesTable = React.lazy(() => import('./SparklinesTable'));
 
 export default function TableArea(){
   const context = useContext(TableContext)
   useEffect(()=>{ 
-    console.log('conext', context)
+    // console.log('conext', context)
   },[context])
   if(context.loading){
     return(
@@ -38,7 +39,7 @@ export default function TableArea(){
     else if(context.tableType === 'chart'){
       return <>
         <Suspense fallback={<div>Loading...</div>}>
-          <SparklinesTable /> 
+          <DataDisplayTable /> 
         </Suspense>
       </>
     }

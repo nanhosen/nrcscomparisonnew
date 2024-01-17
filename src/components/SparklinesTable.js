@@ -79,25 +79,17 @@ function basinComparator(a, b){
   return sortResult 
 }
 function CustomToolbar(props) {
-  // console.log('toolbar props', props)
-  const apiRef = useGridApiContext();
-  const page = useGridSelector(apiRef, gridPageSelector);
-  const pageCount = useGridSelector(apiRef, gridPageCountSelector);
-  const visRows = useGridSelector(apiRef, gridVisibleRowCountSelector);
-
-  console.log('apiRef', apiRef)
-  console.log('page', page)
-  console.log('pageCount', pageCount)
-  console.log('visRows', visRows)
+  console.log('toolbar props', props)
+  const {normalType, dispatcher,  ...rest} = props
   return (
-    <GridToolbarContainer {...props}>
-    <Box pt={0.18}>
-      <GridToolbarColumnsButton />
-      <GridToolbarFilterButton />
-      <GridToolbarDensitySelector />
-      <GridToolbarExport />
-    </Box>
-      <TableStatsSwitch switchhandler={props.switchhandler}/>
+    <GridToolbarContainer >
+      <Box pt={0.18}>
+        <GridToolbarColumnsButton />
+        <GridToolbarFilterButton />
+        <GridToolbarDensitySelector />
+        <GridToolbarExport />
+      </Box>
+      <TableStatsSwitch dispatcher = {dispatcher}/>
       <TableTypeSwitch />
     </GridToolbarContainer>
   );
@@ -238,7 +230,9 @@ export default function SparklinesTable() {
                 setColumnVisibilityDispatcher({type:'mysteriousChange', payload: switchState})
               }
               components={{ Toolbar: CustomToolbar }} 
-              componentsProps={{ toolbar: { switchhandler: handleSwitch } }}
+              componentsProps={{
+                toolbar: { normalType: context.normalType, dispatcher: setColumnVisibilityDispatcher },
+              }} 
               density = {'comfortable'}
               autoHeight = {false}
               rowHeight={35}
